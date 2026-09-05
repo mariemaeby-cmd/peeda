@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peeda — ESI Facility Directory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --slate-50: #F8FAFC;
+    --slate-100: #F1F5F9;
+    --slate-200: #E2E8F0;
+    --slate-500: #64748B;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1E293B;
+    --slate-900: #0F172A;
+    --crimson: #B91C1C;
+    --crimson-dark: #991B1B;
+    --emerald: #059669;
+    --white: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--slate-50);
+    color: var(--slate-900);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--slate-200);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .brand-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--slate-900);
+  }
+
+  .brand-sub {
+    font-size: 0.7rem;
+    color: var(--slate-500);
+    font-weight: 500;
+    margin-top: 1px;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--slate-100);
+    border: 1px solid var(--slate-200);
+    color: var(--slate-700);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--emerald);
+  }
+
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .stat-chip {
+    background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 12px 18px;
+    flex: 1 1 160px;
+  }
+  .stat-chip .label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--slate-500);
+  }
+  .stat-chip .value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--slate-900);
+    margin-top: 2px;
+  }
+
+  .search-panel {
+    background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+
+  .search-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  input[type="text"] {
+    flex: 1 1 260px;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    padding: 11px 14px;
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--slate-900);
+  }
+  input[type="text"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--slate-900);
+  }
+
+  select {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    padding: 11px 12px;
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--slate-900);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border: 1px solid var(--slate-200);
+    background: var(--white);
+    color: var(--slate-500);
+    cursor: pointer;
+    border-radius: 999px;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: var(--slate-900);
+    color: var(--white);
+    border-color: var(--slate-900);
+  }
+  .tab:hover:not(.active) { border-color: var(--slate-500); color: var(--slate-700); }
+
+  .upload-row {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--slate-100);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--slate-500);
+    flex-wrap: wrap;
+  }
+  .upload-row label {
+    background: var(--slate-900);
+    color: var(--white);
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .upload-row label:hover { background: var(--slate-700); }
+  input[type="file"] { display: none; }
+
+  .count-line {
+    font-size: 0.82rem;
+    color: var(--slate-500);
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .count-line strong { color: var(--slate-900); font-weight: 700; }
+
+  .table-card {
+    background: var(--white);
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  thead th {
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--slate-500);
+    padding: 12px 16px;
+    background: var(--slate-50);
+    border-bottom: 1px solid var(--slate-200);
+  }
+
+  tbody tr { border-bottom: 1px solid var(--slate-100); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--slate-50); }
+
+  td { padding: 12px 16px; vertical-align: top; color: var(--slate-700); }
+
+  .sno {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--slate-500);
+    font-size: 0.78rem;
+  }
+
+  .type-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 3px 9px;
+    background: var(--slate-100);
+    color: var(--slate-700);
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .verified-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--emerald);
+    font-weight: 700;
+    font-size: 0.75rem;
+  }
+  .verified-mark::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--emerald);
+  }
+  .unverified-mark {
+    color: var(--slate-500);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--slate-500);
+    font-size: 0.95rem;
+  }
+
+  footer {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--slate-200);
+    font-size: 0.78rem;
+    color: var(--slate-500);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="brand-title">Peeda</div>
+      <div class="brand-sub">ESI Facility Directory — India</div>
+    </div>
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      Independent civic-tech directory
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="stats-row">
+    <div class="stat-chip">
+      <div class="label">Total entries</div>
+      <div class="value" id="stat-total">—</div>
+    </div>
+    <div class="stat-chip">
+      <div class="label">States / regions</div>
+      <div class="value" id="stat-states">—</div>
+    </div>
+    <div class="stat-chip">
+      <div class="label">Verified so far</div>
+      <div class="value" id="stat-verified">—</div>
+    </div>
+  </div>
+
+  <div class="search-panel">
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Search by city, address, or facility name…">
+      <select id="stateFilter">
+        <option value="">All states</option>
+      </select>
+    </div>
+    <div class="tabs" id="typeTabs">
+      <div class="tab active" data-type="">All types</div>
+      <div class="tab" data-type="Hospital">Hospital</div>
+      <div class="tab" data-type="Dispensary">Dispensary</div>
+      <div class="tab" data-type="Branch Office">Branch Office / DCBO</div>
+    </div>
+    <div class="upload-row">
+      <label for="csvUpload">Load directory CSV</label>
+      <input type="file" id="csvUpload" accept=".csv">
+      <span id="uploadStatus">No file loaded — showing sample entries below.</span>
+    </div>
+  </div>
+
+  <div class="count-line" id="countLine"></div>
+
+  <div class="table-card">
+    <div id="tableWrap"></div>
+  </div>
+
+  <footer>
+    Source: ESIC's published cumulative facility directory, transcribed and structured manually. Verification status reflects an independent search-engine spot-check, not official confirmation — treat unverified entries as unconfirmed, not incorrect.
+  </footer>
+
+</div>
+
+<script>
+let allRows = [];
+
+const sampleCSV = `sno,state,type,city,address,search_hit,match_source
+1,AP,Hospital,Tirupathi,"ESI Hospital, Avilala Post, RC Road, Tirupathi-517507",True,srotirupati.esic.gov.in
+2,AP,Dispensary,Ananthapuram,"Court Road, Ananthapuram",False,
+3,AP,Branch Office,Adhoni,"ESI BRANCH OFFICE, ESI COMPOUND WALL, ADONI-518302, KURNOOL-DT",False,
+4,TN,Hospital,Chennai,"ESI Hospital, K.K. Nagar, Chennai",False,
+5,WB,Dispensary,Kolkata,"ESI Dispensary, Dum Dum Cantt, Kolkata",False,
+`;
+
+function parseAndRender(csvText) {
+  Papa.parse(csvText, {
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      allRows = results.data.filter(r => r.sno);
+      populateStateFilter();
+      renderStats();
+      applyFilters();
+    }
+  });
+}
+
+function populateStateFilter() {
+  const select = document.getElementById('stateFilter');
+  const states = [...new Set(allRows.map(r => r.state).filter(Boolean))].sort();
+  select.innerHTML = '<option value="">All states</option>' +
+    states.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+function renderStats() {
+  document.getElementById('stat-total').textContent = allRows.length.toLocaleString();
+  const states = new Set(allRows.map(r => r.state).filter(Boolean));
+  document.getElementById('stat-states').textContent = states.size;
+  const verified = allRows.filter(r => r.search_hit === 'True').length;
+  document.getElementById('stat-verified').textContent =
+    allRows.length ? `${verified} / ${allRows.length}` : '—';
+}
+
+function applyFilters() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const state = document.getElementById('stateFilter').value;
+  const activeTab = document.querySelector('.tab.active');
+  const type = activeTab ? activeTab.dataset.type : '';
+
+  let filtered = allRows.filter(r => {
+    if (state && r.state !== state) return false;
+    if (type && r.type !== type) return false;
+    if (q) {
+      const hay = `${r.city} ${r.address} ${r.type}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  renderTable(filtered);
+}
+
+function renderTable(rows) {
+  const countLine = document.getElementById('countLine');
+  const wrap = document.getElementById('tableWrap');
+
+  countLine.innerHTML = `Showing <strong>${rows.length.toLocaleString()}</strong> of ${allRows.length.toLocaleString()} entries`;
+
+  if (rows.length === 0) {
+    wrap.innerHTML = `<div class="empty-state">No entries match this search. Try a different city, state, or facility type.</div>`;
+    return;
+  }
+
+  const rowsHtml = rows.slice(0, 300).map(r => `
+    <tr>
+      <td class="sno">${r.sno}</td>
+      <td><span class="type-badge">${r.type || ''}</span></td>
+      <td>${r.state || ''}</td>
+      <td>${r.city || ''}</td>
+      <td>${r.address || ''}</td>
+      <td>${r.search_hit === 'True'
+        ? `<span class="verified-mark">${r.match_source || 'confirmed'}</span>`
+        : `<span class="unverified-mark">unverified</span>`}</td>
+    </tr>
+  `).join('');
+
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>S.No</th>
+          <th>Type</th>
+          <th>State</th>
+          <th>City</th>
+          <th>Address</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    ${rows.length > 300 ? `<div class="count-line" style="padding:14px 16px;">Showing first 300 results — narrow your search to see more precisely.</div>` : ''}
+  `;
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('stateFilter').addEventListener('change', applyFilters);
+
+document.getElementById('typeTabs').addEventListener('click', (e) => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  applyFilters();
+});
+
+document.getElementById('csvUpload').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    parseAndRender(evt.target.result);
+    document.getElementById('uploadStatus').textContent = `Loaded: ${file.name}`;
+  };
+  reader.readAsText(file);
+});
+
+parseAndRender(sampleCSV);
+</script>
+
+</body>
+</html>
