@@ -7,44 +7,44 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
   :root {
-    --slate-50: #F8FAFC;
-    --slate-100: #F1F5F9;
-    --slate-200: #E2E8F0;
-    --slate-500: #64748B;
-    --slate-600: #475569;
-    --slate-700: #334155;
-    --slate-800: #1E293B;
-    --slate-900: #0F172A;
-    --crimson: #B91C1C;
-    --crimson-dark: #991B1B;
-    --emerald: #059669;
-    --white: #FFFFFF;
+    --bg: #FAFAF9;
+    --surface: #FFFFFF;
+    --charcoal: #26272B;
+    --charcoal-soft: #4B4D53;
+    --muted: #8A8C92;
+    --line: #E4E4E1;
+    --accent: #3B5A6B;
+    --accent-soft: #EDF2F4;
+    --warn-bg: #FBF3EA;
+    --warn-border: #D8B98A;
+    --warn-text: #6B4A1E;
   }
 
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    background: var(--slate-50);
-    color: var(--slate-900);
+    background: var(--bg);
+    color: var(--charcoal);
     font-family: 'Inter', -apple-system, sans-serif;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
 
   header {
-    background: var(--white);
-    border-bottom: 1px solid var(--slate-200);
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
     position: sticky;
     top: 0;
     z-index: 30;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
   }
 
   .header-inner {
-    max-width: 1100px;
+    max-width: 1160px;
     margin: 0 auto;
     padding: 14px 24px;
     display: flex;
@@ -54,255 +54,173 @@
     flex-wrap: wrap;
   }
 
-  .brand-title {
-    font-size: 1.05rem;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    color: var(--slate-900);
-  }
+  .brand-title { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 0.7rem; color: var(--muted); font-weight: 500; margin-top: 1px; }
 
-  .brand-sub {
-    font-size: 0.7rem;
-    color: var(--slate-500);
-    font-weight: 500;
-    margin-top: 1px;
-  }
-
-  .status-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--slate-100);
-    border: 1px solid var(--slate-200);
-    color: var(--slate-700);
-    padding: 8px 14px;
+  .locate-btn {
+    background: var(--charcoal);
+    color: var(--surface);
+    border: none;
+    padding: 9px 16px;
     border-radius: 8px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
   }
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--emerald);
-  }
+  .locate-btn:hover { background: var(--charcoal-soft); }
 
-  .wrap {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 28px 24px 80px;
-  }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 28px 24px 80px; }
 
-  .stats-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-
+  .stats-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
   .stat-chip {
-    background: var(--white);
-    border: 1px solid var(--slate-200);
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 12px;
     padding: 12px 18px;
     flex: 1 1 160px;
   }
-  .stat-chip .label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--slate-500);
+  .stat-chip .label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .stat-chip .value { font-size: 1.4rem; font-weight: 800; margin-top: 2px; }
+
+  #alertBox {
+    display: none;
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    color: var(--warn-text);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    font-size: 0.88rem;
+    line-height: 1.55;
   }
-  .stat-chip .value {
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: var(--slate-900);
-    margin-top: 2px;
+  #alertBox strong { display: block; font-size: 0.95rem; margin-bottom: 6px; }
+  #alertBox a { color: var(--warn-text); text-decoration: underline; font-weight: 600; }
+  #alertBox .dismiss {
+    float: right;
+    cursor: pointer;
+    color: var(--warn-text);
+    font-weight: 600;
+    background: none;
+    border: none;
+    font-size: 0.8rem;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .map-panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  #map { height: 340px; border-radius: 12px; }
+  .map-note {
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding: 10px 14px 6px;
   }
 
   .search-panel {
-    background: var(--white);
-    border: 1px solid var(--slate-200);
+    background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
   }
 
-  .search-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
+  .search-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
   input[type="text"] {
     flex: 1 1 260px;
     font-size: 0.9rem;
     font-family: 'Inter', sans-serif;
     padding: 11px 14px;
-    border: 1px solid var(--slate-200);
+    border: 1px solid var(--line);
     border-radius: 10px;
-    background: var(--white);
-    color: var(--slate-900);
+    background: var(--surface);
+    color: var(--charcoal);
   }
-  input[type="text"]:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--slate-900);
-  }
+  input[type="text"]:focus { outline: none; box-shadow: 0 0 0 2px var(--charcoal); }
 
   select {
     font-family: 'Inter', sans-serif;
     font-size: 0.85rem;
     padding: 11px 12px;
-    border: 1px solid var(--slate-200);
+    border: 1px solid var(--line);
     border-radius: 10px;
-    background: var(--white);
-    color: var(--slate-900);
+    background: var(--surface);
+    color: var(--charcoal);
   }
 
-  .tabs {
-    display: flex;
-    gap: 6px;
-    margin-top: 14px;
-    flex-wrap: wrap;
-  }
-
+  .tabs { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
   .tab {
-    font-size: 0.78rem;
-    font-weight: 600;
-    padding: 8px 14px;
-    border: 1px solid var(--slate-200);
-    background: var(--white);
-    color: var(--slate-500);
-    cursor: pointer;
-    border-radius: 999px;
-    transition: all 0.15s;
+    font-size: 0.78rem; font-weight: 600; padding: 8px 14px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+    cursor: pointer; border-radius: 999px; transition: all 0.15s;
   }
-  .tab.active {
-    background: var(--slate-900);
-    color: var(--white);
-    border-color: var(--slate-900);
-  }
-  .tab:hover:not(.active) { border-color: var(--slate-500); color: var(--slate-700); }
+  .tab.active { background: var(--charcoal); color: var(--surface); border-color: var(--charcoal); }
+  .tab:hover:not(.active) { border-color: var(--charcoal-soft); color: var(--charcoal-soft); }
 
-  .upload-row {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--slate-100);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 0.8rem;
-    color: var(--slate-500);
-    flex-wrap: wrap;
-  }
-  .upload-row label {
-    background: var(--slate-900);
-    color: var(--white);
-    padding: 9px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-  }
-  .upload-row label:hover { background: var(--slate-700); }
-  input[type="file"] { display: none; }
+  .count-line { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; font-weight: 500; }
+  .count-line strong { color: var(--charcoal); font-weight: 700; }
 
-  .count-line {
-    font-size: 0.82rem;
-    color: var(--slate-500);
-    margin-bottom: 10px;
-    font-weight: 500;
-  }
-  .count-line strong { color: var(--slate-900); font-weight: 700; }
-
-  .table-card {
-    background: var(--white);
-    border: 1px solid var(--slate-200);
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-  }
-
+  .table-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
   thead th {
-    text-align: left;
-    font-weight: 700;
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--slate-500);
-    padding: 12px 16px;
-    background: var(--slate-50);
-    border-bottom: 1px solid var(--slate-200);
+    text-align: left; font-weight: 700; font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--muted); padding: 12px 16px;
+    background: var(--bg); border-bottom: 1px solid var(--line);
   }
-
-  tbody tr { border-bottom: 1px solid var(--slate-100); }
+  tbody tr { border-bottom: 1px solid var(--line); }
   tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--slate-50); }
+  tbody tr:hover { background: var(--accent-soft); }
+  td { padding: 12px 16px; vertical-align: top; color: var(--charcoal-soft); }
 
-  td { padding: 12px 16px; vertical-align: top; color: var(--slate-700); }
-
-  .sno {
-    font-family: 'IBM Plex Mono', monospace;
-    color: var(--slate-500);
-    font-size: 0.78rem;
-  }
+  .sno { font-family: 'IBM Plex Mono', monospace; color: var(--muted); font-size: 0.78rem; }
 
   .type-badge {
-    display: inline-block;
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    padding: 3px 9px;
-    background: var(--slate-100);
-    color: var(--slate-700);
-    border-radius: 6px;
-    white-space: nowrap;
+    display: inline-block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.03em; padding: 3px 9px; background: var(--accent-soft);
+    color: var(--accent); border-radius: 6px; white-space: nowrap;
   }
 
-  .verified-mark {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    color: var(--emerald);
-    font-weight: 700;
-    font-size: 0.75rem;
-  }
-  .verified-mark::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--emerald);
-  }
-  .unverified-mark {
-    color: var(--slate-500);
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
+  .verified-mark { color: var(--accent); font-weight: 700; font-size: 0.75rem; }
+  .unverified-mark { color: var(--muted); font-size: 0.75rem; font-weight: 500; }
 
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--slate-500);
-    font-size: 0.95rem;
+  .maps-link {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--line);
+    color: var(--charcoal-soft); text-decoration: none; font-size: 0.9rem;
   }
+  .maps-link:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 0.95rem; }
 
   footer {
-    margin-top: 32px;
-    padding-top: 20px;
-    border-top: 1px solid var(--slate-200);
-    font-size: 0.78rem;
-    color: var(--slate-500);
-    line-height: 1.6;
+    margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-size: 0.78rem; color: var(--muted); line-height: 1.6;
+  }
+  footer a { color: var(--accent); }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(38,39,43,0.45);
+    z-index: 100; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-box {
+    background: var(--surface); border-radius: 16px; max-width: 460px; width: 100%;
+    padding: 26px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .modal-box h3 { margin: 0 0 10px; font-size: 1.1rem; }
+  .modal-box p { font-size: 0.88rem; color: var(--charcoal-soft); line-height: 1.6; }
+  .modal-box a.citation-link {
+    display: inline-block; margin-top: 10px; font-size: 0.82rem; color: var(--accent);
+    font-weight: 600; text-decoration: underline;
+  }
+  .modal-box button.close-modal {
+    margin-top: 18px; background: var(--charcoal); color: var(--surface); border: none;
+    padding: 9px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
   }
 </style>
 </head>
@@ -314,36 +232,29 @@
       <div class="brand-title">Peeda</div>
       <div class="brand-sub">ESI Facility Directory — India</div>
     </div>
-    <div class="status-badge">
-      <span class="status-dot"></span>
-      Independent civic-tech directory
-    </div>
+    <button class="locate-btn" id="locateBtn">Check facilities near me</button>
   </div>
 </header>
 
 <div class="wrap">
 
   <div class="stats-row">
-    <div class="stat-chip">
-      <div class="label">Total entries</div>
-      <div class="value" id="stat-total">—</div>
-    </div>
-    <div class="stat-chip">
-      <div class="label">States / regions</div>
-      <div class="value" id="stat-states">—</div>
-    </div>
-    <div class="stat-chip">
-      <div class="label">Verified so far</div>
-      <div class="value" id="stat-verified">—</div>
-    </div>
+    <div class="stat-chip"><div class="label">Total entries</div><div class="value" id="stat-total">—</div></div>
+    <div class="stat-chip"><div class="label">States / regions</div><div class="value" id="stat-states">—</div></div>
+    <div class="stat-chip"><div class="label">Verified so far</div><div class="value" id="stat-verified">—</div></div>
+  </div>
+
+  <div id="alertBox"></div>
+
+  <div class="map-panel">
+    <div id="map"></div>
+    <div class="map-note">Map shows your approximate location once you click "Check facilities near me." Individual facility pins aren't plotted yet — this dataset has addresses, not coordinates, so precise on-map markers per facility require a one-time geocoding pass.</div>
   </div>
 
   <div class="search-panel">
     <div class="search-row">
       <input type="text" id="searchInput" placeholder="Search by city, address, or facility name…">
-      <select id="stateFilter">
-        <option value="">All states</option>
-      </select>
+      <select id="stateFilter"><option value="">All states</option></select>
     </div>
     <div class="tabs" id="typeTabs">
       <div class="tab active" data-type="">All types</div>
@@ -351,27 +262,32 @@
       <div class="tab" data-type="Dispensary">Dispensary</div>
       <div class="tab" data-type="Branch Office">Branch Office / DCBO</div>
     </div>
-    <div class="upload-row">
-      <label for="csvUpload">Load directory CSV</label>
-      <input type="file" id="csvUpload" accept=".csv">
-      <span id="uploadStatus">No file loaded — showing sample entries below.</span>
-    </div>
   </div>
 
   <div class="count-line" id="countLine"></div>
-
-  <div class="table-card">
-    <div id="tableWrap"></div>
-  </div>
+  <div class="table-card"><div id="tableWrap"></div></div>
 
   <footer>
-    Source: ESIC's published cumulative facility directory, transcribed and structured manually. Verification status reflects an independent search-engine spot-check, not official confirmation — treat unverified entries as unconfirmed, not incorrect.
+    Source: ESIC's published cumulative facility directory, transcribed and structured manually. Verification status reflects an independent search-engine spot-check, not official confirmation. "Nearby" check is based on matching city/state, not a true 10km radius — see note above.
   </footer>
+</div>
 
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3>No ESI facility found in your area</h3>
+    <p>
+      Under the ESI Corporation's policy (adopted at its 183rd Board Meeting, 07.12.2020), if no ESI hospital, dispensary, or Insurance Medical Practitioner is available within 10 km of your residence, you're entitled to visit any ESIC-empanelled hospital directly — no referral required. Bring your ESI e-Pehchan Card / Health Passbook along with your Aadhaar or another government ID.
+    </p>
+    <p>This is grounded in Section 56(1) of the ESI Act, 1948, which obliges the provision of medical benefit to insured persons.</p>
+    <a class="citation-link" href="https://esic.gov.in/attachments/publicationfile/4bba80675aa61f0e8c9f7f57c155b185.pdf" target="_blank" rel="noopener">Read the official ESIC policy note (PDF) →</a>
+    <br>
+    <button class="close-modal" id="closeModal">Got it</button>
+  </div>
 </div>
 
 <script>
 let allRows = [];
+let map, userMarker;
 
 const sampleCSV = `sno,state,type,city,address,search_hit,match_source
 1,AP,Hospital,Tirupathi,"ESI Hospital, Avilala Post, RC Road, Tirupathi-517507",True,srotirupati.esic.gov.in
@@ -380,6 +296,13 @@ const sampleCSV = `sno,state,type,city,address,search_hit,match_source
 4,TN,Hospital,Chennai,"ESI Hospital, K.K. Nagar, Chennai",False,
 5,WB,Dispensary,Kolkata,"ESI Dispensary, Dum Dum Cantt, Kolkata",False,
 `;
+
+function initMap() {
+  map = L.map('map').setView([22.5, 79], 5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+}
 
 function parseAndRender(csvText) {
   Papa.parse(csvText, {
@@ -397,8 +320,7 @@ function parseAndRender(csvText) {
 function populateStateFilter() {
   const select = document.getElementById('stateFilter');
   const states = [...new Set(allRows.map(r => r.state).filter(Boolean))].sort();
-  select.innerHTML = '<option value="">All states</option>' +
-    states.map(s => `<option value="${s}">${s}</option>`).join('');
+  select.innerHTML = '<option value="">All states</option>' + states.map(s => `<option value="${s}">${s}</option>`).join('');
 }
 
 function renderStats() {
@@ -406,8 +328,12 @@ function renderStats() {
   const states = new Set(allRows.map(r => r.state).filter(Boolean));
   document.getElementById('stat-states').textContent = states.size;
   const verified = allRows.filter(r => r.search_hit === 'True').length;
-  document.getElementById('stat-verified').textContent =
-    allRows.length ? `${verified} / ${allRows.length}` : '—';
+  document.getElementById('stat-verified').textContent = allRows.length ? `${verified} / ${allRows.length}` : '—';
+}
+
+function googleMapsLink(row) {
+  const q = encodeURIComponent(`${row.type} ${row.city} ${row.address}`);
+  return `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
 
 function applyFilters() {
@@ -432,11 +358,10 @@ function applyFilters() {
 function renderTable(rows) {
   const countLine = document.getElementById('countLine');
   const wrap = document.getElementById('tableWrap');
-
   countLine.innerHTML = `Showing <strong>${rows.length.toLocaleString()}</strong> of ${allRows.length.toLocaleString()} entries`;
 
   if (rows.length === 0) {
-    wrap.innerHTML = `<div class="empty-state">No entries match this search. Try a different city, state, or facility type.</div>`;
+    wrap.innerHTML = `<div class="empty-state">No entries match this search.</div>`;
     return;
   }
 
@@ -447,33 +372,22 @@ function renderTable(rows) {
       <td>${r.state || ''}</td>
       <td>${r.city || ''}</td>
       <td>${r.address || ''}</td>
-      <td>${r.search_hit === 'True'
-        ? `<span class="verified-mark">${r.match_source || 'confirmed'}</span>`
-        : `<span class="unverified-mark">unverified</span>`}</td>
+      <td>${r.search_hit === 'True' ? `<span class="verified-mark">${r.match_source || 'confirmed'}</span>` : `<span class="unverified-mark">unverified</span>`}</td>
+      <td><a class="maps-link" href="${googleMapsLink(r)}" target="_blank" rel="noopener" title="Open in Google Maps">↗</a></td>
     </tr>
   `).join('');
 
   wrap.innerHTML = `
     <table>
-      <thead>
-        <tr>
-          <th>S.No</th>
-          <th>Type</th>
-          <th>State</th>
-          <th>City</th>
-          <th>Address</th>
-          <th>Status</th>
-        </tr>
-      </thead>
+      <thead><tr><th>S.No</th><th>Type</th><th>State</th><th>City</th><th>Address</th><th>Status</th><th></th></tr></thead>
       <tbody>${rowsHtml}</tbody>
     </table>
-    ${rows.length > 300 ? `<div class="count-line" style="padding:14px 16px;">Showing first 300 results — narrow your search to see more precisely.</div>` : ''}
+    ${rows.length > 300 ? `<div class="count-line" style="padding:14px 16px;">Showing first 300 results — narrow your search to see more.</div>` : ''}
   `;
 }
 
 document.getElementById('searchInput').addEventListener('input', applyFilters);
 document.getElementById('stateFilter').addEventListener('change', applyFilters);
-
 document.getElementById('typeTabs').addEventListener('click', (e) => {
   const tab = e.target.closest('.tab');
   if (!tab) return;
@@ -482,18 +396,58 @@ document.getElementById('typeTabs').addEventListener('click', (e) => {
   applyFilters();
 });
 
-document.getElementById('csvUpload').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt) {
-    parseAndRender(evt.target.result);
-    document.getElementById('uploadStatus').textContent = `Loaded: ${file.name}`;
-  };
-  reader.readAsText(file);
+document.getElementById('closeModal').addEventListener('click', () => {
+  document.getElementById('modalOverlay').style.display = 'none';
 });
 
-parseAndRender(sampleCSV);
+function showAlert(message) {
+  const box = document.getElementById('alertBox');
+  box.innerHTML = `<button class="dismiss" onclick="document.getElementById('alertBox').style.display='none'">Dismiss</button><strong>Heads up</strong>${message}`;
+  box.style.display = 'block';
+}
+
+document.getElementById('locateBtn').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    showAlert('Your browser does not support location detection.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const { latitude, longitude } = pos.coords;
+    map.setView([latitude, longitude], 11);
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.marker([latitude, longitude]).addTo(map).bindPopup('You are here').openPopup();
+
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+      const data = await res.json();
+      const addr = data.address || {};
+      const city = addr.city || addr.town || addr.village || addr.state_district || '';
+      const state = addr.state || '';
+
+      const cityMatches = allRows.filter(r =>
+        (city && r.city && r.city.toLowerCase().includes(city.toLowerCase())) ||
+        (state && r.state && state.toLowerCase().includes(r.state.toLowerCase()))
+      );
+
+      if (cityMatches.length === 0) {
+        document.getElementById('modalOverlay').style.display = 'flex';
+      } else {
+        showAlert(`Found ${cityMatches.length} listed ESI facility record(s) near "${city || state}". This is a city/state match, not a precise 10km radius check — verify the closest one's actual distance yourself before relying on it.`);
+      }
+    } catch (err) {
+      showAlert('Could not determine your city from location — try searching manually instead.');
+    }
+  }, () => {
+    showAlert('Location access was denied or unavailable. You can still search manually by city or state above.');
+  });
+});
+
+initMap();
+
+fetch('data/esi_master_directory.csv')
+  .then(response => { if (!response.ok) throw new Error('not found'); return response.text(); })
+  .then(csvText => parseAndRender(csvText))
+  .catch(() => parseAndRender(sampleCSV));
 </script>
 
 </body>
