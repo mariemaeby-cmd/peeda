@@ -232,7 +232,7 @@
       <div class="brand-title">Peeda</div>
       <div class="brand-sub">ESI Facility Directory — India</div>
     </div>
-    <button class="locate-btn" id="locateBtn">Check facilities near me</button>
+    <button class="locate-btn" id="locateBtn">Show my approximate area</button>
   </div>
 </header>
 
@@ -248,7 +248,7 @@
 
   <div class="map-panel">
     <div id="map"></div>
-    <div class="map-note">Map shows your approximate location once you click "Check facilities near me." Individual facility pins aren't plotted yet — this dataset has addresses, not coordinates, so precise on-map markers per facility require a one-time geocoding pass.</div>
+    <div class="map-note">Map defaults to India. Click "Show my approximate area" to estimate your state/city from your network connection (IP-based, not precise GPS) — accuracy is city/region-level, not exact.</div>
   </div>
 
   <div class="search-panel">
@@ -264,6 +264,11 @@
     </div>
   </div>
 
+  <h2 style="font-size:1.1rem; font-weight:800; margin: 28px 0 4px;">Directory</h2>
+  <p style="font-size:0.8rem; color:var(--muted); margin: 0 0 14px;">
+    Base data source for every entry: ESIC's own published cumulative facility directory (transcribed and structured manually).
+    Rows additionally marked <span class="verified-mark" style="font-weight:700;">confirmed</span> were cross-checked against an independent web source shown in the Source column below.
+  </p>
   <div class="count-line" id="countLine"></div>
   <div class="table-card"><div id="tableWrap"></div></div>
 
@@ -298,7 +303,7 @@ const sampleCSV = `sno,state,type,city,address,search_hit,match_source
 `;
 
 function initMap() {
-  map = L.map('map').setView([22.5, 79], 5);
+  map = L.map('map').setView([22.5, 79], 4.5);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
@@ -406,40 +411,41 @@ function showAlert(message) {
   box.style.display = 'block';
 }
 
-document.getElementById('locateBtn').addEventListener('click', () => {
-  if (!navigator.geolocation) {
-    showAlert('Your browser does not support location detection.');
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-    const { latitude, longitude } = pos.coords;
-    map.setView([latitude, longitude], 11);
-    if (userMarker) map.removeLayer(userMarker);
-    userMarker = L.marker([latitude, longitude]).addTo(map).bindPopup('You are here').openPopup();
+document.getElementById('locateBtn').addEventListener('click', async () => {
+  document.getElementById('locateBtn').textContent = 'Locating…';
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    if (!res.ok) throw new Error('lookup failed');
+    const data = await res.json();
 
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-      const data = await res.json();
-      const addr = data.address || {};
-      const city = addr.city || addr.town || addr.village || addr.state_district || '';
-      const state = addr.state || '';
+    const city = data.city || '';
+    const state = data.region || '';
+    const lat = data.latitude;
+    const lon = data.longitude;
 
-      const cityMatches = allRows.filter(r =>
-        (city && r.city && r.city.toLowerCase().includes(city.toLowerCase())) ||
-        (state && r.state && state.toLowerCase().includes(r.state.toLowerCase()))
-      );
-
-      if (cityMatches.length === 0) {
-        document.getElementById('modalOverlay').style.display = 'flex';
-      } else {
-        showAlert(`Found ${cityMatches.length} listed ESI facility record(s) near "${city || state}". This is a city/state match, not a precise 10km radius check — verify the closest one's actual distance yourself before relying on it.`);
-      }
-    } catch (err) {
-      showAlert('Could not determine your city from location — try searching manually instead.');
+    if (lat && lon) {
+      map.setView([lat, lon], 9);
+      if (userMarker) map.removeLayer(userMarker);
+      userMarker = L.marker([lat, lon]).addTo(map)
+        .bindPopup(`Approximate area: ${city ? city + ', ' : ''}${state} (based on your network, not exact GPS)`)
+        .openPopup();
     }
-  }, () => {
-    showAlert('Location access was denied or unavailable. You can still search manually by city or state above.');
-  });
+
+    const cityMatches = allRows.filter(r =>
+      (city && r.city && r.city.toLowerCase().includes(city.toLowerCase())) ||
+      (state && r.state && (state.toLowerCase().includes(r.state.toLowerCase()) || r.state.toLowerCase().includes(state.toLowerCase())))
+    );
+
+    if (cityMatches.length === 0) {
+      document.getElementById('modalOverlay').style.display = 'flex';
+    } else {
+      showAlert(`Found ${cityMatches.length} listed ESI facility record(s) in or near "${city || state}". This is a city/state-level estimate, not a precise 10km radius check — confirm actual distance yourself before relying on it.`);
+    }
+  } catch (err) {
+    showAlert('Could not estimate your location right now. You can still search manually by city or state above.');
+  } finally {
+    document.getElementById('locateBtn').textContent = 'Show my approximate area';
+  }
 });
 
 initMap();
